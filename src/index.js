@@ -2,8 +2,11 @@ import app from "./app.js";
 import logger from "./configs/logger.config.js";
 import connection from "./configs/db.config.js";
 import Users from "./models/user.model.js";
+import Apartments from "./models/apartment.model.js";
+import Reservations from "./models/reservation.model.js";
+import Admins from "./models/admin.model.js";
 
-const PORT = 3000;
+const PORT = 8000;
 let server = app.listen(PORT, () => {
   logger.info(`Server Listening on port ${PORT}`);
 });
@@ -15,6 +18,7 @@ const exitHandler = () => {
     process.exit(1);
   }
 };
+
 const unexpectedErrorHnadler = (error) => {
   logger.error(error);
   exitHandler();

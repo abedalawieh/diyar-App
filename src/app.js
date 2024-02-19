@@ -1,24 +1,21 @@
 import fastify from "fastify";
 import dotenv from "dotenv";
 import fastifyExpress from "@fastify/express";
-import morgan from "morgan";
+import fastifySensible from "fastify-sensible";
+
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import cors from "cors";
-import fastifyFileUpload from "fastify-file-upload";
-import createHttpError from "http-errors";
+import routes from "./routes/auth/index.js";
 
 //DOTENV config
 dotenv.config();
-
 //Create fastify App
 const app = fastify();
 await app.register(fastifyExpress);
+app.register(fastifySensible); // Register fastify-sensible plugin
 
-if (process.env.NODE_ENV !== "production") {
-  app.use(morgan("dev"));
-}
 app.use(helmet());
 //enable cookie parser
 app.use(cookieParser());
@@ -26,19 +23,22 @@ app.use(cookieParser());
 app.use(compression());
 //cors
 app.use(cors({ origin: "http://localhost:3000" }));
-//routes api v1
-// app.use("/api/v1", routes);
-app.use(async (req, res, next) => {
-  next(createHttpError.NotFound("This route does not exist"));
-});
-app.use(async (err, req, res, next) => {
-  res.status(err.status || 500);
-  res.send({
+
+app.addHook("onError", (request, reply, error, done) => {
+  console.error(error);
+  reply.status(error.statusCode || 500).send({
     error: {
-      status: err.status || 500,
-      message: err.message,
+      status: error.statusCode || 500,
+      message: error.message || "Internal Server Error",
     },
   });
+  done();
 });
+//routes api v1
+
+await app.register(routes, { prefix: "/api/v1/auth" });
 
 export default app;
+// app.use(async (req, res, next) => {
+//   next(createHttpError.NotFound("This route does not exist"));
+// });
